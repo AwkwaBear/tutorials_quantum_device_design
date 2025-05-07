@@ -37,13 +37,14 @@ PALACE_BUILD_DIR_TEMP=$(mktemp -d -p ~) # Create a temporary build dir in user's
 PALACE_INSTALL_PREFIX="/srv/conda/envs/notebook"
 
 # Define Palace version (tag or commit hash) for stability
-PALACE_VERSION="v0.18.0" # Example: Use a specific release tag from awslabs/palace
+# PALACE_VERSION="v0.13.0" # Example: Use a specific release tag from awslabs/palace
 
 if [ -d "${PALACE_CODE_DIR}" ]; then
   echo "Removing existing Palace source directory: ${PALACE_CODE_DIR}"
   rm -rf "${PALACE_CODE_DIR}"
 fi
-git clone https://github.com/awslabs/palace.git --branch ${PALACE_VERSION} --depth 1 "${PALACE_CODE_DIR}"
+# --branch ${PALACE_VERSION} 
+git clone https://github.com/awslabs/palace.git --depth 1 "${PALACE_CODE_DIR}"
 
 echo "Configuring Palace build in ${PALACE_BUILD_DIR_TEMP}..."
 cd "${PALACE_BUILD_DIR_TEMP}"
