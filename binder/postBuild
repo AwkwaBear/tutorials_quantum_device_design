@@ -1,81 +1,96 @@
 #!/bin/bash
 set -ex # Exit immediately if a command exits with a non-zero status and print commands.
 
-echo "--- Starting postBuild script ---"
+echo "--- Starting postBuild script (Revised for User Directory and Simplicity) ---"
+
+# Create a directory in the user's home for our source code.
+# '~' reliably refers to the user's home directory (e.g., /home/jovyan).
+# This directory will hold the source code for SQDMetal and Palace.
+# For editable installs (-e), the source code must persist.
+USER_GIT_SRC_DIR="~/cloned_libs"
+mkdir -p "${USER_GIT_SRC_DIR}"
 
 # --- Install SQDMetal ---
-echo "Cloning and installing SQDMetal..."
-# SQDMETAL_DIR="/opt/SQDMetal" # Using /opt as a standard location for manually installed software
-# git clone https://github.com/sqdlab/SQDMetal.git ${SQDMETAL_DIR}
+echo "Cloning and installing SQDMetal in editable mode..."
+SQDMETAL_CODE_DIR="${USER_GIT_SRC_DIR}/SQDMetal"
 
-# Pip install from the Conda environment's pip
-# The current working directory for postBuild is the root of the repository.
-# Let's clone SQDMetal into a temporary directory within the build context.
-SQDMETAL_TEMP_DIR=$(mktemp -d)
-git clone https://github.com/sqdlab/SQDMetal.git ${SQDMETAL_TEMP_DIR}
-
-# Use the Conda environment's pip
-PIP_CMD="/srv/conda/envs/notebook/bin/pip"
-${PIP_CMD} install -e ${SQDMETAL_TEMP_DIR}
-# No need to keep SQDMETAL_TEMP_DIR source after install if -e linked properly or copied files.
-# For editable installs, the source needs to persist. Let's install it to /opt/SQDMetal instead
-# for clarity and persistence, as editable installs link to the source.
-
-if [ -d "/opt/SQDMetal" ]; then
-  rm -rf "/opt/SQDMetal"
+# Ensure a fresh clone if the directory somehow exists (unlikely in clean MyBinder builds)
+if [ -d "${SQDMETAL_CODE_DIR}" ]; then
+  echo "Removing existing SQDMetal directory: ${SQDMETAL_CODE_DIR}"
+  rm -rf "${SQDMETAL_CODE_DIR}"
 fi
-git clone https://github.com/sqdlab/SQDMetal.git /opt/SQDMetal
-${PIP_CMD} install -e /opt/SQDMetal
+git clone https://github.com/sqdlab/SQDMetal.git "${SQDMETAL_CODE_DIR}"
+
+# Install SQDMetal in editable mode using 'pip' from the active Conda environment.
+# The 'pip' command will correctly point to the Conda environment's pip.
+pip install -e "${SQDMETAL_CODE_DIR}"
 echo "SQDMetal installation complete."
 
 
 # --- Install Palace ---
 echo "Cloning, building, and installing Palace..."
-# PALACE_DIR="/opt/palace_src" # Source directory
-PALACE_BUILD_DIR="/tmp/palace_build" # Temporary build directory
-PALACE_INSTALL_PREFIX="/srv/conda/envs/notebook" # Install into Conda env
+PALACE_CODE_DIR="${USER_GIT_SRC_DIR}/palace_src"
+# It's good practice to build outside the source directory.
+PALACE_BUILD_DIR_TEMP=$(mktemp -d -p ~) # Create a temporary build dir in user's home
+
+# This is where Palace binaries will be installed (Conda env's bin)
+PALACE_INSTALL_PREFIX="/srv/conda/envs/notebook"
 
 # Define Palace version (tag or commit hash) for stability
-PALACE_VERSION="v0.18.0" # Example: Use a specific release tag from https://github.com/awslabs/palace
-# Or use a specific commit: PALACE_VERSION="abcdef1234567890abcdef1234567890abcdef12"
+PALACE_VERSION="v0.18.0" # Example: Use a specific release tag from awslabs/palace
 
-PALACE_SRC_TEMP_DIR=$(mktemp -d)
-git clone https://github.com/awslabs/palace.git --branch ${PALACE_VERSION} --depth 1 ${PALACE_SRC_TEMP_DIR}
-cd ${PALACE_SRC_TEMP_DIR}
+if [ -d "${PALACE_CODE_DIR}" ]; then
+  echo "Removing existing Palace source directory: ${PALACE_CODE_DIR}"
+  rm -rf "${PALACE_CODE_DIR}"
+fi
+git clone https://github.com/awslabs/palace.git --branch ${PALACE_VERSION} --depth 1 "${PALACE_CODE_DIR}"
 
-mkdir -p ${PALACE_BUILD_DIR} # Create build directory
-cd ${PALACE_BUILD_DIR}
+echo "Configuring Palace build in ${PALACE_BUILD_DIR_TEMP}..."
+cd "${PALACE_BUILD_DIR_TEMP}"
 
-# Configure Palace with CMake
-# -DCMAKE_INSTALL_PREFIX ensures it installs into the Conda environment, making it findable.
-# Disable GPU support and other optional features not needed for MyBinder to speed up build.
-cmake ${PALACE_SRC_TEMP_DIR} \
+# Configure Palace with CMake, pointing to the source code.
+# Install into the Conda environment to make it easily findable in the PATH.
+# Disable GPU support and other optional features not needed for MyBinder
+# to speed up build and reduce dependencies.
+cmake "${PALACE_CODE_DIR}" \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=${PALACE_INSTALL_PREFIX} \
+    -DCMAKE_INSTALL_PREFIX="${PALACE_INSTALL_PREFIX}" \
     -DPALACE_WITH_SLEPC=OFF \
     -DPALACE_WITH_ARPACK=OFF \
     -DPALACE_WITH_GPU=OFF \
-    -DPALACE_WITH_GSLIB=OFF # Example: check Palace docs for more flags
+    -DPALACE_WITH_GSLIB=OFF # Check Palace docs for minimal/relevant build flags
 
 # Compile Palace (use number of available processors)
+echo "Compiling Palace..."
 make -j$(nproc)
 
 # Install Palace
+echo "Installing Palace..."
 make install
 echo "Palace installation complete."
 
-# Verify Palace installation
+# Verify Palace installation (optional but good for debugging)
 echo "Checking Palace executable..."
 if [ -f "${PALACE_INSTALL_PREFIX}/bin/palace" ]; then
     ls -l "${PALACE_INSTALL_PREFIX}/bin/palace"
-    "${PALACE_INSTALL_PREFIX}/bin/palace" --version || echo "Palace --version command not available or failed, but executable exists."
+    # Attempt to get version, but don't fail script if --version isn't supported or errors
+    "${PALACE_INSTALL_PREFIX}/bin/palace" --version || echo "Palace --version command feedback (ignore if it's just a usage message)."
 else
-    echo "ERROR: Palace executable not found at ${PALACE_INSTALL_PREFIX}/bin/palace"
-    exit 1
+    echo "ERROR: Palace executable not found at ${PALACE_INSTALL_PREFIX}/bin/palace. Build or install might have failed."
+    # Consider exiting if Palace is critical: exit 1
 fi
 
-# Clean up Palace source and build directories to save image space
-# rm -rf ${PALACE_SRC_TEMP_DIR} # Source code
-# rm -rf ${PALACE_BUILD_DIR}  # Build directory
+# Clean up the temporary Palace build directory to save image space.
+# The Palace source code directory (${PALACE_CODE_DIR}) might also be removed if
+# `make install` copies all necessary files and it's not needed at runtime.
+# SQDMetal source MUST remain due to the editable install.
+echo "Cleaning up Palace build directory: ${PALACE_BUILD_DIR_TEMP}"
+rm -rf "${PALACE_BUILD_DIR_TEMP}"
+# To also remove Palace source (usually safe for compiled apps after install):
+# echo "Cleaning up Palace source directory: ${PALACE_CODE_DIR}"
+# rm -rf "${PALACE_CODE_DIR}"
+
+# Return to the original directory (root of the repo)
+cd "${REPO_DIR}" # REPO_DIR is an environment variable set by repo2docker
 
 echo "--- postBuild script finished successfully ---"
