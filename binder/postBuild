@@ -47,25 +47,26 @@ cd "${PALACE_WORK_DIR}" # Important: Change current directory for Palace operati
 # Clone Palace source code
 cd "${PALACE_WORK_DIR}"
 echo "Cloning Palace repository..."
-git clone "https://github.com/awslabs/palace.git" --depth 1 palace_src
+git clone  --recurse-submodules "https://github.com/awslabs/palace.git" --depth 1 palace_src
 cd palace_src
 mkdir build
 cd build
 echo "Configuring Palace build with CMake..."
-cmake "${PALACE_WORK_DIR}/palace_src" \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_C_FLAGS="-fPIC" \
-    -DCMAKE_CXX_FLAGS="-fPIC" \
-    -DPALACE_WITH_SLEPC=OFF \
-    -DPALACE_WITH_ARPACK=ON \
-    -DPALACE_WITH_CUDA=OFF \
-    -DPALACE_WITH_HIP=OFF \
-    -DPALACE_WITH_GSLIB=OFF \
-    -DBLA_VENDOR=OpenBLAS \
-    -DBLAS_LIBRARIES="/usr/lib/x86_64-linux-gnu/libopenblas.so" \
-    -DLAPACK_LIBRARIES="/usr/lib/x86_64-linux-gnu/liblapack.so;/usr/lib/x86_64-linux-gnu/libblas.so" # Adjust paths if needed
+cmake ..
+# cmake "${PALACE_WORK_DIR}/palace_src" \
+#     -DCMAKE_BUILD_TYPE=Release \
+#     -DCMAKE_C_FLAGS="-fPIC" \
+#     -DCMAKE_CXX_FLAGS="-fPIC" \
+#     -DPALACE_WITH_SLEPC=OFF \
+#     -DPALACE_WITH_ARPACK=ON \
+#     -DPALACE_WITH_CUDA=OFF \
+#     -DPALACE_WITH_HIP=OFF \
+#     -DPALACE_WITH_GSLIB=OFF \
+#     -DBLA_VENDOR=OpenBLAS \
+#     -DBLAS_LIBRARIES="/usr/lib/x86_64-linux-gnu/libopenblas.so" \
+#     -DLAPACK_LIBRARIES="/usr/lib/x86_64-linux-gnu/liblapack.so;/usr/lib/x86_64-linux-gnu/libblas.so" # Adjust paths if needed
 
-echo "Compiling Palace..."
+# echo "Compiling Palace..."
 make -j$(nproc)
 # echo "Installing Palace..."
 make install
