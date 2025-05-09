@@ -47,8 +47,8 @@ cd "${PALACE_WORK_DIR}" # Important: Change current directory for Palace operati
 # Clone Palace source code
 cd "${PALACE_WORK_DIR}"
 echo "Cloning Palace repository..."
-git clone  --recurse-submodules "https://github.com/awslabs/palace.git" --depth 1 palace_src
-cd palace_src
+git clone  "https://github.com/awslabs/palace.git" 
+# cd palace_src
 mkdir build
 cd build
 echo "Configuring Palace build with CMake..."
@@ -67,7 +67,7 @@ cmake ..
 #     -DLAPACK_LIBRARIES="/usr/lib/x86_64-linux-gnu/liblapack.so;/usr/lib/x86_64-linux-gnu/libblas.so" # Adjust paths if needed
 
 # echo "Compiling Palace..."
-make -j$(nproc)
+make -j $(nproc)
 # echo "Installing Palace..."
 make install
 
