@@ -54,22 +54,22 @@ mkdir -p build
 cd build
 
 echo "Configuring Palace build with CMake..."
-cmake .. # \
-#     -DCMAKE_BUILD_TYPE=Release \
-#     -DCMAKE_INSTALL_PREFIX="${PALACE_INSTALL_PREFIX}" \
-#     -DCMAKE_C_FLAGS="-fPIC" \
-#     -DCMAKE_CXX_FLAGS="-fPIC" \
-#     -DPALACE_WITH_SLEPC=ON \
-#     -DPALACE_WITH_ARPACK=OFF \
-#     -DPALACE_WITH_CUDA=OFF \
-#     -DPALACE_WITH_HIP=OFF \
-#     -DPALACE_WITH_GSLIB=ON # Add other -D flags as needed for a minimal build
+cmake ..  \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX="${PALACE_INSTALL_PREFIX}" \
+    -DCMAKE_C_FLAGS="-fPIC" \
+    -DCMAKE_CXX_FLAGS="-fPIC" \
+    -DPALACE_WITH_SLEPC=OFF \
+    -DPALACE_WITH_ARPACK=ON \
+    -DPALACE_WITH_CUDA=OFF \
+    -DPALACE_WITH_HIP=OFF \
+    -DPALACE_WITH_GSLIB=OFF # Add other -D flags as needed for a minimal build
 
 echo "Compiling Palace..."
 make -j $(nproc)
 
 # echo "Installing Palace..."
-# make install
+make install
 
 echo "Palace installation complete."
 
