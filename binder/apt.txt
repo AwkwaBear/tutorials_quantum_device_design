@@ -7,6 +7,13 @@ gfortran         # Fortran compiler (often a Palace dependency)
 pkg-config
 git
 curl
+python3
+gpg
+lsb-release
+python3-distutils 
+python3-venv 
+unzip 
+zip
 
 # --- GUI/Visualization & Headless Display ---
 gmsh
@@ -20,3 +27,5 @@ libopenblas-dev  # For BLAS/LAPACK (required by Palace)
 zlib1g-dev
 libunwind-dev    # Optional for Palace, but good to include if some configurations need it
 ca-certificates
+coreutils 
+environment-modules
