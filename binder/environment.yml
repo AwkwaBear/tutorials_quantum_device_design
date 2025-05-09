@@ -38,5 +38,6 @@ dependencies:
   # --- Other Python packages from your script ---
   - pip:
     - pyvirtualdisplay
+    - libceed
     - pyaedt==0.6.46
     - gmsh==4.11.1

@@ -53,6 +53,9 @@ cd palace_src
 mkdir -p build
 cd build
 
+ls -l /usr/lib/x86_64-linux-gnu/libopenblas*
+ls -l /usr/lib/x86_64-linux-gnu/liblapack*
+ls -l /usr/lib/x86_64-linux-gnu/libblas*
 echo "Configuring Palace build with CMake..."
 cmake ..  \
     -DCMAKE_BUILD_TYPE=Release \
@@ -63,7 +66,10 @@ cmake ..  \
     -DPALACE_WITH_ARPACK=ON \
     -DPALACE_WITH_CUDA=OFF \
     -DPALACE_WITH_HIP=OFF \
-    -DPALACE_WITH_GSLIB=OFF # Add other -D flags as needed for a minimal build
+    -DPALACE_WITH_GSLIB=ON \   # Add other -D flags as needed for a minimal build
+    -DBLA_VENDOR=OpenBLAS \
+    -DBLAS_LIBRARIES="/usr/lib/x86_64-linux-gnu/libopenblas.so" \
+    -DLAPACK_LIBRARIES="/usr/lib/x86_64-linux-gnu/liblapack.so;/usr/lib/x86_64-linux-gnu/libblas.so" # Some LAPACK implementations might depend on BLAS
 
 echo "Compiling Palace..."
 make -j $(nproc)
