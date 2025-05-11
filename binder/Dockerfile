@@ -60,7 +60,7 @@ RUN chmod +x /tmp/postBuild && /tmp/postBuild && rm /tmp/postBuild
 
 # To check palace executions
 RUN mkdir -p /home/${NB_USER}/workspace/example && \
-    cp -r palace/examples/cpw/* /workspace/example/
+    cp -r palace/examples/cpw/* /home/${NB_USER}/workspace/example/
 
 # Set working directory to the example
 WORKDIR /home/${NB_USER}/workspace/example
