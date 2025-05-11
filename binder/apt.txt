@@ -14,7 +14,10 @@ python3-distutils
 python3-venv 
 unzip 
 zip
-
+wget
+g++
+gcc
+gfortran
 # --- GUI/Visualization & Headless Display ---
 gmsh
 paraview         # Full ParaView. Be mindful this is large. If only Python libs are needed, this is okay.
@@ -29,3 +32,11 @@ libunwind-dev    # Optional for Palace, but good to include if some configuratio
 ca-certificates
 coreutils 
 environment-modules
+libopenmpi-dev
+openmpi-bin
+libblas-dev
+liblapack-dev
+libmetis-dev
+libsuperlu-dev
+libhypre-dev
+libmumps-dev
