@@ -4,6 +4,18 @@ LABEL maintainer="Sadman Ahmed Shanto <shanto@usc.edu>"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+
+ARG NB_USER=jovyan
+ARG NB_UID=1000
+ENV USER ${NB_USER}
+ENV NB_UID ${NB_UID}
+ENV HOME /home/${NB_USER}
+
+RUN adduser --disabled-password \
+    --gecos "Default user" \
+    --uid ${NB_UID} \
+    ${NB_USER}
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -30,7 +42,7 @@ ENV OMPI_ALLOW_RUN_AS_ROOT=1
 ENV OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
 
 # Set working directory
-WORKDIR /workspace
+WORKDIR /home/${NB_USER}/workspace
 
 # Clone and build Palace
 RUN git clone https://github.com/awslabs/palace.git && \
@@ -47,21 +59,12 @@ COPY binder/postBuild /tmp/postBuild
 RUN chmod +x /tmp/postBuild && /tmp/postBuild && rm /tmp/postBuild
 
 # To check palace executions
-RUN mkdir -p /workspace/example && \
+RUN mkdir -p /home/${NB_USER}/workspace/example && \
     cp -r palace/examples/cpw/* /workspace/example/
 
 # Set working directory to the example
-WORKDIR /workspace/example
+WORKDIR /home/${NB_USER}/workspace/example
 
-# ARG NB_USER=jovyan
-# ARG NB_UID=1000
-# ENV USER ${NB_USER}
-# ENV NB_UID ${NB_UID}
-# ENV HOME /home/${NB_USER}
 
-# RUN adduser --disabled-password \
-#     --gecos "Default user" \
-#     --uid ${NB_UID} \
-#     ${NB_USER}
 # Set default command to display Palace help
 # CMD ["palace", "--help"]
