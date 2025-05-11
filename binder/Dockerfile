@@ -52,7 +52,7 @@ RUN git clone https://github.com/awslabs/palace.git && \
     make -j$(nproc)
 
 
-COPY postBuild /tmp/postBuild
+COPY binder/postBuild /tmp/postBuild
 RUN chmod +x /tmp/postBuild && /tmp/postBuild && rm /tmp/postBuild
 
 # To check palace executions
