@@ -3,7 +3,16 @@ FROM ubuntu:22.04
 LABEL maintainer="Sadman Ahmed Shanto <shanto@usc.edu>"
 
 ENV DEBIAN_FRONTEND=noninteractive
+ARG NB_USER=jovyan
+ARG NB_UID=1000
+ENV USER ${NB_USER}
+ENV NB_UID ${NB_UID}
+ENV HOME /home/${NB_USER}
 
+RUN adduser --disabled-password \
+    --gecos "Default user" \
+    --uid ${NB_UID} \
+    ${NB_USER}
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -23,6 +32,8 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
+RUN python3 -m pip install --no-cache-dir notebook jupyterlab
+
 # Set environment variables to allow OpenMPI to run as root
 ENV OMPI_ALLOW_RUN_AS_ROOT=1
 ENV OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
@@ -40,6 +51,10 @@ RUN git clone https://github.com/awslabs/palace.git && \
              -DCMAKE_Fortran_COMPILER=gfortran && \
     make -j$(nproc)
 
+
+COPY postBuild /tmp/postBuild
+RUN chmod +x /tmp/postBuild && /tmp/postBuild && rm /tmp/postBuild
+
 # To check palace executions
 RUN mkdir -p /workspace/example && \
     cp -r palace/examples/cpw/* /workspace/example/
@@ -48,4 +63,4 @@ RUN mkdir -p /workspace/example && \
 WORKDIR /workspace/example
 
 # Set default command to display Palace help
-CMD ["palace", "--help"]
+# CMD ["palace", "--help"]
