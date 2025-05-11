@@ -1,6 +1,13 @@
 #!/bin/bash
 set -e # Exit immediately if a command exits with a non-zero status.
 
+
+git clone https://github.com/spack/spack.git
+. spack/share/spack/setup-env.sh
+spack install hdf5
+
+
+spack install palace
 # echo "Starting Palace build process..."
 
 # # Define installation prefix for Palace within the user's home directory
