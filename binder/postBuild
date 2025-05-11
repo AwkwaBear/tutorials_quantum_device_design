@@ -2,18 +2,19 @@
 set -ex # Exit immediately if a command exits with a non-zero status and print commands.
 
 echo "--- Starting postBuild script (Revised for User Directory and Simplicity) ---"
-
 echo "Starting Palace build process..."
 
-# Define installation prefix for Palace
-PALACE_INSTALL_PREFIX=/opt/palace
+# Define installation prefix for Palace within the user's home directory
+# CHANGED: Installation prefix is now within /home/jovyan/
+export PALACE_INSTALL_PREFIX=/home/jovyan/opt/palace 
 export PALACE_SRC_DIR=/home/jovyan/palace_src
 export PALACE_BUILD_DIR=/home/jovyan/palace_build
 
 # Create directories
+# These directories are within /home/jovyan, so no permission issues here.
 mkdir -p $PALACE_SRC_DIR
 mkdir -p $PALACE_BUILD_DIR
-mkdir -p $PALACE_INSTALL_PREFIX
+mkdir -p $PALACE_INSTALL_PREFIX # This will now be /home/jovyan/opt/palace
 
 # Clone the Palace repository
 echo "Cloning Palace repository..."
@@ -24,22 +25,18 @@ echo "Configuring Palace with CMake..."
 cd $PALACE_BUILD_DIR
 
 # Basic CMake configuration.
-# You might need to add more -D options based on Palace documentation
-# or if you want to disable certain features (e.g., GPU support, specific solvers)
-# to speed up the build or reduce dependencies.
-# For MyBinder, we definitely want to disable GPU support.
-# We also want to ensure it uses the system MPI.
+# Using the updated PALACE_INSTALL_PREFIX
 cmake -DCMAKE_INSTALL_PREFIX=$PALACE_INSTALL_PREFIX \
       -DCMAKE_BUILD_TYPE=Release \
       -DPALACE_WITH_MPI=ON \
-      -DPALACE_WITH_OPENMP=ON \ # Enable OpenMP if desired, MyBinder has multiple cores
-      -DPALACE_WITH_SUPERLU=ON \ # Example: Enable SuperLU (check if it builds its own or needs libsuperlu-dev)
-      -DPALACE_WITH_STRUMPACK=OFF \ # STRUMPACK can be heavy, disable if not needed
-      -DPALACE_WITH_SLEPC=ON \    # SLEPc is often used for eigenproblems
-      -DPALACE_WITH_ARPACK=OFF \   # Disable if SLEPc is preferred or to reduce build time
-      -DPALACE_WITH_GPU=OFF \     # Crucial: Disable GPU support
-      -DPALACE_BUILD_EXAMPLES=OFF \ # Optional: Disable building examples to save time
-      -DPALACE_BUILD_TESTS=OFF \    # Optional: Disable building tests to save time
+      -DPALACE_WITH_OPENMP=ON \ 
+      -DPALACE_WITH_SUPERLU=ON \ 
+      -DPALACE_WITH_STRUMPACK=OFF \ 
+      -DPALACE_WITH_SLEPC=ON \    
+      -DPALACE_WITH_ARPACK=OFF \   
+      -DPALACE_WITH_GPU=OFF \     
+      -DPALACE_BUILD_EXAMPLES=OFF \ 
+      -DPALACE_BUILD_TESTS=OFF \    
       $PALACE_SRC_DIR
 
 # Build Palace
@@ -54,15 +51,22 @@ make install
 
 # Add Palace to PATH for the Jupyter environment
 # This ensures 'palace' command is available in terminals and notebooks
-# The specific file to modify depends on the shell and how Jupyter starts it.
-# For bash, .bashrc or .profile. For repo2docker, it often sources scripts in /etc/profile.d/
-# A common approach for MyBinder is to create a script in /etc/profile.d/
 echo "Configuring environment for Palace..."
-PROFILE_SCRIPT_PATH="/etc/profile.d/palace_env.sh"
-echo "#!/bin/bash" > $PROFILE_SCRIPT_PATH
+PROFILE_SCRIPT_PATH="/home/jovyan/.bashrc" # Modifying user's .bashrc is safer and more standard
+
+# Append to .bashrc if not already there to avoid duplicate entries
+# This also ensures it's sourced automatically for new bash shells.
+# For Jupyter notebooks and terminals started via Jupyter, this should also work.
+# If Jupyter uses a different shell or doesn't source .bashrc,
+# an alternative is to create a script in $NB_PYTHON_PREFIX/etc/conda/activate.d/
+# or $NB_PYTHON_PREFIX/etc/conda/deactivate.d/ for conda environments.
+# However, modifying .bashrc is a good first step.
+
+echo "" >> $PROFILE_SCRIPT_PATH
+echo "# Palace Environment Configuration" >> $PROFILE_SCRIPT_PATH
 echo "export PATH=$PALACE_INSTALL_PREFIX/bin:\$PATH" >> $PROFILE_SCRIPT_PATH
-echo "export LD_LIBRARY_PATH=$PALACE_INSTALL_PREFIX/lib:\$LD_LIBRARY_PATH" >> $PROFILE_SCRIPT_PATH # If Palace installs .so files to lib
-chmod +x $PROFILE_SCRIPT_PATH
+echo "export LD_LIBRARY_PATH=$PALACE_INSTALL_PREFIX/lib:\$LD_LIBRARY_PATH" >> $PROFILE_SCRIPT_PATH 
+echo "export LD_LIBRARY_PATH=$PALACE_INSTALL_PREFIX/lib64:\$LD_LIBRARY_PATH" >> $PROFILE_SCRIPT_PATH # Some systems use lib64
 
 # Clean up build directory to save space (optional, but good practice for MyBinder)
 echo "Cleaning up Palace build directory..."
@@ -72,18 +76,7 @@ rm -rf $PALACE_BUILD_DIR
 
 echo "Palace installation complete."
 echo "Palace executable should be available at $PALACE_INSTALL_PREFIX/bin/palace"
-echo "Make sure to source $PROFILE_SCRIPT_PATH or restart your shell/kernel."
-
-
-
-
-
-# Create a directory in the user's home for our source code.
-# '~' reliably refers to the user's home directory (e.g., /home/jovyan).
-# This directory will hold the source code for SQDMetal and Palace.
-# For editable installs (-e), the source code must persist.
-USER_GIT_SRC_DIR="~/cloned_libs"
-mkdir -p "${USER_GIT_SRC_DIR}"
+echo "You might need to open a new terminal or restart the Jupyter kernel for PATH changes to take effect."
 
 # --- Install SQDMetal ---
 echo "Cloning and installing SQDMetal in editable mode..."
