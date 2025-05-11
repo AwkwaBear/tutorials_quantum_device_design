@@ -18,7 +18,7 @@ RUN pip3 install --upgrade pip setuptools wheel
 RUN pip3 install numpy scipy mpi4py matplotlib
 
 # Clone and build Palace
-RUN git clone --recursive https://github.com/mfem/palace.git /palace
+RUN git clone --recursive https://github.com/awslabs/palace.git /palace
 WORKDIR /palace
 
 # Configure and build
