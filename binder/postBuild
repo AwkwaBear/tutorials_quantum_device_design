@@ -1,30 +1,17 @@
 #!/bin/bash
-set -ex # Exit immediately if a command exits with a non-zero status and print commands.
-
-<<<<<<< Updated upstream
-echo "--- Starting postBuild script (Revised for User Directory and Simplicity) ---"
-echo "Starting Palace build process..."
-
-# Define installation prefix for Palace within the user's home directory
-# CHANGED: Installation prefix is now within /home/jovyan/
-=======
-#!/bin/bash
 set -e # Exit immediately if a command exits with a non-zero status.
 
-<<<<<<< HEAD
 echo "Starting Palace build process..."
 
 # Define installation prefix for Palace within the user's home directory
->>>>>>> Stashed changes
 export PALACE_INSTALL_PREFIX=/home/jovyan/opt/palace 
 export PALACE_SRC_DIR=/home/jovyan/palace_src
 export PALACE_BUILD_DIR=/home/jovyan/palace_build
 
 # Create directories
-# These directories are within /home/jovyan, so no permission issues here.
 mkdir -p $PALACE_SRC_DIR
 mkdir -p $PALACE_BUILD_DIR
-mkdir -p $PALACE_INSTALL_PREFIX # This will now be /home/jovyan/opt/palace
+mkdir -p $PALACE_INSTALL_PREFIX
 
 # Clone the Palace repository
 echo "Cloning Palace repository..."
@@ -35,20 +22,6 @@ echo "Configuring Palace with CMake..."
 cd $PALACE_BUILD_DIR
 
 # Basic CMake configuration.
-<<<<<<< Updated upstream
-# Using the updated PALACE_INSTALL_PREFIX
-cmake -DCMAKE_INSTALL_PREFIX=$PALACE_INSTALL_PREFIX \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DPALACE_WITH_MPI=ON \
-      -DPALACE_WITH_OPENMP=ON \ 
-      -DPALACE_WITH_SUPERLU=ON \ 
-      -DPALACE_WITH_STRUMPACK=OFF \ 
-      -DPALACE_WITH_SLEPC=ON \    
-      -DPALACE_WITH_ARPACK=OFF \   
-      -DPALACE_WITH_GPU=OFF \     
-      -DPALACE_BUILD_EXAMPLES=OFF \ 
-      -DPALACE_BUILD_TESTS=OFF \    
-=======
 # Ensure no trailing spaces after backslashes for line continuation.
 # The last argument MUST be $PALACE_SRC_DIR.
 cmake -DCMAKE_INSTALL_PREFIX=$PALACE_INSTALL_PREFIX \
@@ -62,7 +35,6 @@ cmake -DCMAKE_INSTALL_PREFIX=$PALACE_INSTALL_PREFIX \
       -DPALACE_WITH_GPU=OFF \
       -DPALACE_BUILD_EXAMPLES=OFF \
       -DPALACE_BUILD_TESTS=OFF \
->>>>>>> Stashed changes
       $PALACE_SRC_DIR
 
 # Build Palace
@@ -76,28 +48,8 @@ echo "Installing Palace..."
 make install
 
 # Add Palace to PATH for the Jupyter environment
-<<<<<<< Updated upstream
-# This ensures 'palace' command is available in terminals and notebooks
-echo "Configuring environment for Palace..."
-PROFILE_SCRIPT_PATH="/home/jovyan/.bashrc" # Modifying user's .bashrc is safer and more standard
-
-# Append to .bashrc if not already there to avoid duplicate entries
-# This also ensures it's sourced automatically for new bash shells.
-# For Jupyter notebooks and terminals started via Jupyter, this should also work.
-# If Jupyter uses a different shell or doesn't source .bashrc,
-# an alternative is to create a script in $NB_PYTHON_PREFIX/etc/conda/activate.d/
-# or $NB_PYTHON_PREFIX/etc/conda/deactivate.d/ for conda environments.
-# However, modifying .bashrc is a good first step.
-
-echo "" >> $PROFILE_SCRIPT_PATH
-echo "# Palace Environment Configuration" >> $PROFILE_SCRIPT_PATH
-echo "export PATH=$PALACE_INSTALL_PREFIX/bin:\$PATH" >> $PROFILE_SCRIPT_PATH
-echo "export LD_LIBRARY_PATH=$PALACE_INSTALL_PREFIX/lib:\$LD_LIBRARY_PATH" >> $PROFILE_SCRIPT_PATH 
-echo "export LD_LIBRARY_PATH=$PALACE_INSTALL_PREFIX/lib64:\$LD_LIBRARY_PATH" >> $PROFILE_SCRIPT_PATH # Some systems use lib64
-=======
 echo "Configuring environment for Palace..."
 PROFILE_SCRIPT_PATH="/home/jovyan/.bashrc" 
->>>>>>> Stashed changes
 
 echo "" >> $PROFILE_SCRIPT_PATH
 echo "# Palace Environment Configuration" >> $PROFILE_SCRIPT_PATH
@@ -114,17 +66,6 @@ rm -rf $PALACE_BUILD_DIR
 echo "Palace installation complete."
 echo "Palace executable should be available at $PALACE_INSTALL_PREFIX/bin/palace"
 echo "You might need to open a new terminal or restart the Jupyter kernel for PATH changes to take effect."
-<<<<<<< Updated upstream
-=======
-=======
-# Create a directory in the user's home for our source code.
-# '~' reliably refers to the user's home directory (e.g., /home/jovyan).
-# This directory will hold the source code for SQDMetal and Palace.
-# For editable installs (-e), the source code must persist.
-USER_GIT_SRC_DIR="~/cloned_libs"
-mkdir -p "${USER_GIT_SRC_DIR}"
->>>>>>> parent of f4cb292 (new gemini suggestion)
->>>>>>> Stashed changes
 
 # --- Install SQDMetal ---
 echo "Cloning and installing SQDMetal in editable mode..."
@@ -143,176 +84,3 @@ pip install -e "${SQDMETAL_CODE_DIR}"
 echo "SQDMetal installation complete."
 
 
-
-
-# --- Install Palace ---
-echo "Cloning, building, and installing Palace..."
-
-set -ex # Exit immediately if a command exits with a non-zero status and print commands.
-
-echo "--- Starting postBuild script (Direct Palace Install) ---"
-
-# Define a working directory for Palace operations within the user's home.
-PALACE_WORK_DIR="$HOME/palace_build_area"
-mkdir -p "${PALACE_WORK_DIR}"
-cd "${PALACE_WORK_DIR}" # Important: Change current directory for Palace operations
-
-# This is where Palace binaries will be installed (Conda env's bin)
-# PALACE_INSTALL_PREFIX="/srv/conda/envs/notebook"
-
-# Clone Palace source code
-cd "${PALACE_WORK_DIR}"
-echo "Cloning Palace repository..."
-git clone  "https://github.com/awslabs/palace.git" 
-# cd palace_src
-mkdir build
-cd build
-echo "Configuring Palace build with CMake..."
-cmake ..
-# cmake "${PALACE_WORK_DIR}/palace_src" \
-#     -DCMAKE_BUILD_TYPE=Release \
-#     -DCMAKE_C_FLAGS="-fPIC" \
-#     -DCMAKE_CXX_FLAGS="-fPIC" \
-#     -DPALACE_WITH_SLEPC=OFF \
-#     -DPALACE_WITH_ARPACK=ON \
-#     -DPALACE_WITH_CUDA=OFF \
-#     -DPALACE_WITH_HIP=OFF \
-#     -DPALACE_WITH_GSLIB=OFF \
-#     -DBLA_VENDOR=OpenBLAS \
-#     -DBLAS_LIBRARIES="/usr/lib/x86_64-linux-gnu/libopenblas.so" \
-#     -DLAPACK_LIBRARIES="/usr/lib/x86_64-linux-gnu/liblapack.so;/usr/lib/x86_64-linux-gnu/libblas.so" # Adjust paths if needed
-
-# echo "Compiling Palace..."
-make -j $(nproc)
-# echo "Installing Palace..."
-make install
-
-echo "Palace installation complete."
-
-# Verify Palace installation (optional)
-echo "Checking for Palace executable..."
-if [ -f "${PALACE_INSTALL_PREFIX}/bin/palace" ]; then
-    echo "Palace executable found at: ${PALACE_INSTALL_PREFIX}/bin/palace"
-    "${PALACE_INSTALL_PREFIX}/bin/palace" --version || echo "Palace --version output (may be a usage message)."
-else
-    echo "ERROR: Palace executable not found. Build or install might have failed."
-fi
-
-# Clean up the Palace working directory (optional)
-echo "Cleaning up Palace working directory: ${PALACE_WORK_DIR}"
-cd "$HOME" # Ensure we are not inside the directory we are about to remove
-rm -rf "${PALACE_WORK_DIR}"
-
-echo "--- postBuild script finished ---"
-# # Define a working directory for Palace operations within the user's home.
-# PALACE_WORK_DIR="$HOME/palace_build_area"
-# mkdir -p "${PALACE_WORK_DIR}"
-# cd "${PALACE_WORK_DIR}" # Important: Change current directory for Palace operations
-
-# # This is where Palace binaries will be installed (Conda env's bin)
-# PALACE_INSTALL_PREFIX="/srv/conda/envs/notebook"
-
-# # Define Palace version (tag or commit hash) for stability if needed.
-# # For now, cloning the default branch (latest).
-# # Example: PALACE_VERSION_TAG="v0.18.0" # Ensure this tag exists if you use it
-# # If using a tag: git clone --branch "${PALACE_VERSION_TAG}" ...
-
-# # Clone Palace into a subdirectory named 'palace_src' within PALACE_WORK_DIR
-# git clone "https://github.com/awslabs/palace.git" --depth 1 palace_src
-
-# cd palace_src # Change into the cloned Palace source directory (e.g., $HOME/palace_build_area/palace_src)
-
-# # Create a build directory *inside* the Palace source directory
-# mkdir -p build
-# cd build
-
-# echo "Configuring Palace build..."
-# # Configure Palace with CMake. ".." refers to the parent directory (the Palace source root: $HOME/palace_build_area/palace_src)
-# # MODIFIED CMAKE COMMAND:
-# # - Added -DCMAKE_C_FLAGS="-fPIC" and -DCMAKE_CXX_FLAGS="-fPIC"
-# # - Corrected GPU flags to -DPALACE_WITH_CUDA=OFF and -DPALACE_WITH_HIP=OFF
-# cmake .. \
-#     -DCMAKE_BUILD_TYPE=Release \
-#     -DCMAKE_INSTALL_PREFIX="${PALACE_INSTALL_PREFIX}" \
-#     -DCMAKE_C_FLAGS="-fPIC" \
-#     -DCMAKE_CXX_FLAGS="-fPIC" \
-#     -DPALACE_WITH_SLEPC=OFF \
-#     -DPALACE_WITH_ARPACK=OFF \
-#     -DPALACE_WITH_CUDA=OFF \
-#     -DPALACE_WITH_HIP=OFF \
-#     -DPALACE_WITH_GSLIB=OFF # Add other -D flags as needed from Palace docs for minimal build
-
-# echo "Compiling Palace..."
-# make -j$(nproc)
-
-# echo "Installing Palace..."
-# make install
-# echo "Palace installation complete."
-
-# # Verify Palace installation (optional but good for debugging)
-# echo "Checking Palace executable..."
-# if [ -f "${PALACE_INSTALL_PREFIX}/bin/palace" ]; then
-#     ls -l "${PALACE_INSTALL_PREFIX}/bin/palace"
-#     # Attempt to get version, but don't fail script if --version isn't supported or errors
-#     "${PALACE_INSTALL_PREFIX}/bin/palace" --version || echo "Palace --version command feedback (ignore if it's just a usage message)."
-# else
-#     echo "ERROR: Palace executable not found at ${PALACE_INSTALL_PREFIX}/bin/palace. Build or install might have failed."
-#     # Consider exiting if Palace is critical for the notebook to function:
-#     # exit 1
-# fi
-
-# # Clean up the Palace working directory (which contains source and build)
-# # This is aggressive and removes the source too. If `make install` is complete and
-# # the source isn't needed at runtime, this saves space.
-# echo "Cleaning up Palace working directory: ${PALACE_WORK_DIR}"
-# rm -rf "${PALACE_WORK_DIR}"
-
-# # Return to the original directory (root of the repo, $REPO_DIR is set by repo2docker)
-# # This is good practice for any subsequent steps MyBinder might perform.
-# cd "${REPO_DIR}"
-
-
-
-# This script will:
-# 1. Install Spack in the current directory
-# 2. Install MPI via Spack
-# 3. Set the system MPI to Spack's MPI
-# 4. Clone the Palace repository
-# 5. Build Palace
-
-# spack_repo="https://github.com/spack/spack.git"
-# palace_repo="https://github.com/awslabs/palace.git"
-
-# # Install Spack
-# echo 'Installing Spack to:'
-# echo "$PWD"
-# git clone -c feature.manyFiles=true $spack_repo
-# . spack/share/spack/setup-env.sh
-
-# # Install MPI
-# echo 'Installing MPI'
-# spack install mpi
-
-# mpi_info=($(spack find -p mpi))
-# mpi_dir=${mpi_info[-1]}
-# mpi_bin_dir="$mpi_dir/bin"
-
-# # Set up paths
-# echo 'MPI bin directory:'
-# echo $mpi_bin_dir
-# echo -n 'export PATH="' > setup_palace_env.sh
-# echo -n $mpi_bin_dir >> setup_palace_env.sh
-# echo ':$PATH"' >> setup_palace_env.sh
-# source setup_palace_env.sh
-
-# # Install Palace
-# echo 'Installing Palace to:'
-# echo $palace_install_dir
-# git clone --recurse-submodules $palace_repo
-# cd palace
-# mkdir build
-# cd build
-# cmake ..
-# make -j
-
-# echo "--- postBuild script finished successfully ---"
