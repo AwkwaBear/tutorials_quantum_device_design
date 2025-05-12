@@ -46,7 +46,7 @@ ENV OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
 COPY . ${HOME}
 USER root
 RUN chown -R ${NB_UID} ${HOME}
-USER ${NB_USER}
+
 
 # Set working directory
 WORKDIR /home/${NB_USER}/workspace
@@ -72,6 +72,6 @@ RUN mkdir -p /home/${NB_USER}/workspace/example && \
 # Set working directory to the example
 WORKDIR /home/${NB_USER}/workspace/example
 
-
+USER ${NB_USER}
 # Set default command to display Palace help
 # CMD ["palace", "--help"]
