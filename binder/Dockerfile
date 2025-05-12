@@ -41,6 +41,13 @@ RUN python3 -m pip install --no-cache-dir notebook jupyterlab
 ENV OMPI_ALLOW_RUN_AS_ROOT=1
 ENV OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
 
+
+# Make sure the contents of our repo are in ${HOME}
+COPY . ${HOME}
+USER root
+RUN chown -R ${NB_UID} ${HOME}
+USER ${NB_USER}
+
 # Set working directory
 WORKDIR /home/${NB_USER}/workspace
 
