@@ -70,7 +70,7 @@ RUN mkdir -p /home/${NB_USER}/workspace/example && \
     cp -r palace/examples/cpw/* /home/${NB_USER}/workspace/example/
 
 # Set working directory to the example
-WORKDIR /home/${NB_USER}/workspace/example
+WORKDIR /home/${NB_USER}
 
 USER ${NB_USER}
 # Set default command to display Palace help
