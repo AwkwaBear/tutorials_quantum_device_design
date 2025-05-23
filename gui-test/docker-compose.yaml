@@ -1,0 +1,7 @@
+services:
+  ubuntu-gui:
+    build: .
+    container_name: ubuntu-gui
+    ports:
+      - "6080:6080"
+    restart: unless-stopped
