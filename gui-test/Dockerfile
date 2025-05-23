@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV USER=docker
 ENV HOME=/home/docker
 
-# Install necessary packages
+# Install packages
 RUN apt-get update && \
     apt-get install -y \
     xfce4 xfce4-goodies \
@@ -17,18 +17,20 @@ RUN apt-get update && \
     pip3 install websockify && \
     apt-get clean
 
-# Create docker user and fix ownership BEFORE switching users
+## Create a non-root user and give permissions
 RUN useradd -m -s /bin/bash docker && \
     echo "docker:docker" | chpasswd && \
     usermod -aG sudo docker && \
     mkdir -p /home/docker && \
     chown -R docker:docker /home/docker
 
-# Now safe to switch user
+
+## Switch to docker user
 USER docker
 WORKDIR /home/docker
 
-# Now VNC setup works as docker user
+
+## Setup VNC server as docker user
 RUN mkdir -p /home/docker/.vnc && \
     echo "docker" | vncpasswd -f > /home/docker/.vnc/passwd && \
     chmod 600 /home/docker/.vnc/passwd && \
@@ -36,11 +38,9 @@ RUN mkdir -p /home/docker/.vnc && \
     chmod +x /home/docker/.vnc/xstartup
 
 
-# Switch back to root for rest of setup
+## Switch back to root for rest of setup
 USER root
 
-# Fix permissions
-RUN chown -R docker:docker /home/docker
 
 # Install noVNC
 RUN mkdir -p /opt/novnc /opt/websockify && \
@@ -51,9 +51,11 @@ RUN mkdir -p /opt/novnc /opt/websockify && \
     unzip /tmp/websockify.zip -d /opt && \
     mv /opt/websockify-master/* /opt/websockify/
 
-# Copy startup and supervisor configs
+## Copy startup and supervisor configs
 COPY start-vnc.sh /usr/local/bin/start-vnc.sh
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+## Start VNC server and websockify
 RUN chmod +x /usr/local/bin/start-vnc.sh
 
 # Command to launch supervisor

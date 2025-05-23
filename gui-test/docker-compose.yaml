@@ -1,7 +1,7 @@
 services:
-  ubuntu-gui:
+  qdd-gui:
     build: .
-    container_name: ubuntu-gui
+    container_name: qdd-gui
     ports:
       - "6080:6080"
     restart: unless-stopped
