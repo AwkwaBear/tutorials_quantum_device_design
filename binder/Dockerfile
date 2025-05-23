@@ -2,6 +2,8 @@ FROM ubuntu:22.04
 
 LABEL maintainer="Sadman Ahmed Shanto <shanto@usc.edu>"
 
+# TODO - Add a license to the repo
+
 ENV DEBIAN_FRONTEND=noninteractive
 
 
