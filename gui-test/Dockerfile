@@ -7,6 +7,22 @@ ENV HOME=/home/docker
 # Install packages
 RUN apt-get update && \
     apt-get install -y \
+    ## added packages testing below
+    build-essential \
+    cmake \
+    gfortran \
+    git \
+    curl \
+    wget \
+    libopenblas-dev \
+    liblapack-dev \
+    libfftw3-dev \
+    libhdf5-dev \
+    libopenmpi-dev \
+    openmpi-bin \
+    pkg-config \
+    python3 \
+    ##testing packages end
     xfce4 xfce4-goodies \
     tightvncserver \
     supervisor \
@@ -16,6 +32,9 @@ RUN apt-get update && \
     python3-pip && \
     pip3 install websockify && \
     apt-get clean
+
+    
+    
 
 ## Create a non-root user and give permissions
 RUN useradd -m -s /bin/bash docker && \
