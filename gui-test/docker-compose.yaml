@@ -1,7 +1,11 @@
 services:
   qdd-gui:
     build: .
-    container_name: qdd-gui
     ports:
       - "6080:6080"
-    restart: unless-stopped
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6080/vnc.html"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
