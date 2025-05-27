@@ -48,6 +48,12 @@ RUN useradd -m -s /bin/bash docker && \
 USER docker
 WORKDIR /home/docker
 
+## Install miniconda for the docker user
+RUN wget https://repo.anaconda.com/archive/Anaconda3-2023.03-Linux-x86_64.sh -O anaconda.sh && \
+    bash anaconda.sh -b -p $HOME/anaconda3 && \
+    echo 'export PATH="$HOME/anaconda3/bin:$PATH"' >> ~/.bashrc && \
+    rm anaconda.sh
+
 
 ## Setup VNC server as docker user
 RUN mkdir -p /home/docker/.vnc && \
