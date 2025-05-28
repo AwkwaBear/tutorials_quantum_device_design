@@ -49,11 +49,21 @@ USER docker
 WORKDIR /home/docker
 
 ## Install miniconda for the docker user
-RUN wget https://repo.anaconda.com/archive/Anaconda3-2023.03-Linux-x86_64.sh -O anaconda.sh && \
-    bash anaconda.sh -b -p $HOME/anaconda3 && \
-    echo 'export PATH="$HOME/anaconda3/bin:$PATH"' >> ~/.bashrc && \
-    rm anaconda.sh
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh && \
+    bash miniconda.sh -b -p $HOME/miniconda && \
+    rm miniconda.sh && \
+    $HOME/miniconda/bin/conda init bash && \
+    echo 'export PATH="$HOME/miniconda/bin:$PATH"' >> ~/.bashrc
 
+## Install Qiskit metal and set up qdws conda environment
+RUN export PATH="$HOME/miniconda/bin:$PATH" && \
+    conda create -y -n qdws python=3.10 && \
+    mkdir -p ~/qdws_workshop && cd ~/qdws_workshop && \
+    curl -O https://raw.githubusercontent.com/Qiskit/qiskit-metal/main/environment.yml && \
+    conda run -n qdws conda env update -n qdws -f environment.yml && \
+    conda run -n qdws python -m pip install --no-deps -e git+https://github.com/Qiskit/qiskit-metal.git#egg=qiskit-metal
+
+RUN echo 'conda activate qdws' >> ~/.bashrc
 
 ## Setup VNC server as docker user
 RUN mkdir -p /home/docker/.vnc && \
@@ -61,7 +71,6 @@ RUN mkdir -p /home/docker/.vnc && \
     chmod 600 /home/docker/.vnc/passwd && \
     echo -e '#!/bin/sh\nxrdb $HOME/.Xresources\nstartxfce4 &' > /home/docker/.vnc/xstartup && \
     chmod +x /home/docker/.vnc/xstartup
-
 
 ## Switch back to root for rest of setup
 USER root
