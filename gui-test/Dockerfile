@@ -52,7 +52,12 @@ RUN useradd -m -s /bin/bash docker && \
 USER docker
 WORKDIR /home/docker
 
-
+## Install Spack and Palace, 
+## Add loading automatically loading Palace to bashrc 
+RUN git clone --depth=2 --branch=releases/v0.23 https://github.com/spack/spack.git /home/docker/spack && \
+    . /home/docker/spack/share/spack/setup-env.sh && \
+    spack install palace && \
+    echo '. ~/spack/share/spack/setup-env.sh && spack load palace' >> /home/docker/.bashrc
 
 
 ## Install miniconda for the docker user
@@ -81,7 +86,7 @@ RUN export PATH="$HOME/miniconda/bin:$PATH" && \
     cd SQDMetal && \
     conda run -n qdws pip install -e .
     
-
+## Set conda to automatically activate the qdws environmenta
 RUN echo 'conda activate qdws' >> ~/.bashrc
 
 ## Setup VNC server as docker user
