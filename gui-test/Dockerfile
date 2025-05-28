@@ -7,7 +7,6 @@ ENV HOME=/home/docker
 # Install packages
 RUN apt-get update && \
     apt-get install -y \
-    ## added packages testing below
     build-essential \
     cmake \
     gfortran \
@@ -22,7 +21,6 @@ RUN apt-get update && \
     openmpi-bin \
     pkg-config \
     python3 \
-    ##testing packages end
     xfce4 xfce4-goodies \
     tightvncserver \
     supervisor \
@@ -33,9 +31,15 @@ RUN apt-get update && \
     pip3 install websockify && \
     apt-get clean
 
-    
-    
-
+# Install Firefox without Snap 
+RUN apt-get update && \
+    apt-get install -y software-properties-common && \
+    add-apt-repository -y ppa:mozillateam/ppa && \
+    apt-get update && \
+    apt-get install -y firefox-esr && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+   
 ## Create a non-root user and give permissions
 RUN useradd -m -s /bin/bash docker && \
     echo "docker:docker" | chpasswd && \
@@ -47,6 +51,9 @@ RUN useradd -m -s /bin/bash docker && \
 ## Switch to docker user
 USER docker
 WORKDIR /home/docker
+
+
+
 
 ## Install miniconda for the docker user
 RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh && \
@@ -62,6 +69,18 @@ RUN export PATH="$HOME/miniconda/bin:$PATH" && \
     curl -O https://raw.githubusercontent.com/Qiskit/qiskit-metal/main/environment.yml && \
     conda run -n qdws conda env update -n qdws -f environment.yml && \
     conda run -n qdws python -m pip install --no-deps -e git+https://github.com/Qiskit/qiskit-metal.git#egg=qiskit-metal
+
+## Install SQuADDS
+RUN export PATH="$HOME/miniconda/bin:$PATH" && \
+    conda run -n qdws pip install SQuADDS
+
+## Install SQDMetal
+RUN export PATH="$HOME/miniconda/bin:$PATH" && \
+    cd ~/qdws_workshop && \
+    git clone https://github.com/sqdlab/SQDMetal.git && \
+    cd SQDMetal && \
+    conda run -n qdws pip install -e .
+    
 
 RUN echo 'conda activate qdws' >> ~/.bashrc
 
