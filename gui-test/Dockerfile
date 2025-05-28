@@ -4,6 +4,12 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV USER=docker
 ENV HOME=/home/docker
 
+## TODO Install VScode
+## TODO Setup jupyterlab to run outside of container
+## TODO setup Xserver for GUI applications
+## TODO gather list of other packages needed from spt.txt (paraview, etc.)
+
+
 # Install packages
 RUN apt-get update && \
     apt-get install -y \
@@ -53,7 +59,7 @@ USER docker
 WORKDIR /home/docker
 
 ## Install Spack and Palace, 
-## Add loading automatically loading Palace to bashrc 
+## Add to bashrc and have spack load palace on startup
 RUN git clone --depth=2 --branch=releases/v0.23 https://github.com/spack/spack.git /home/docker/spack && \
     . /home/docker/spack/share/spack/setup-env.sh && \
     spack install palace && \
@@ -86,7 +92,7 @@ RUN export PATH="$HOME/miniconda/bin:$PATH" && \
     cd SQDMetal && \
     conda run -n qdws pip install -e .
     
-## Set conda to automatically activate the qdws environmenta
+## Set conda to automatically activate the qdws environment on shell startup
 RUN echo 'conda activate qdws' >> ~/.bashrc
 
 ## Setup VNC server as docker user
