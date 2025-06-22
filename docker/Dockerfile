@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:22.04 AS base
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV USER=docker
@@ -15,10 +15,11 @@ RUN apt-get update && \
     apt-get install -y \
     build-essential \
     cmake \
+    dbus-x11 \
+    gedit \
     gfortran \
     git \
     curl \
-    wget \
     libopenblas-dev \
     liblapack-dev \
     libfftw3-dev \
@@ -27,7 +28,10 @@ RUN apt-get update && \
     openmpi-bin \
     pkg-config \
     python3 \
-    xfce4 xfce4-goodies \
+    x11-utils \
+    x11-apps \
+    xfce4 \
+    xfce4-goodies \
     tightvncserver \
     supervisor \
     wget \
@@ -37,7 +41,7 @@ RUN apt-get update && \
     pip3 install websockify && \
     apt-get clean
 
-# Install Firefox without Snap 
+# Install Firefox WITHOUT Snap (Snap is not supported in Docker)
 RUN apt-get update && \
     apt-get install -y software-properties-common && \
     add-apt-repository -y ppa:mozillateam/ppa && \
@@ -57,6 +61,12 @@ RUN useradd -m -s /bin/bash docker && \
 ## Switch to docker user
 USER docker
 WORKDIR /home/docker
+
+##################################
+# Production stage
+## Installs all packags
+##################################
+FROM base AS prod
 
 ## Install Spack and Palace, 
 ## Add to bashrc and have spack load palace on startup
@@ -91,6 +101,54 @@ RUN export PATH="$HOME/miniconda/bin:$PATH" && \
     git clone https://github.com/sqdlab/SQDMetal.git && \
     cd SQDMetal && \
     conda run -n qdws pip install -e .
+    
+## Set conda to automatically activate the qdws environment on shell startup
+RUN echo 'conda activate qdws' >> ~/.bashrc
+
+## Setup VNC server as docker user
+RUN mkdir -p /home/docker/.vnc && \
+    echo "docker" | vncpasswd -f > /home/docker/.vnc/passwd && \
+    chmod 600 /home/docker/.vnc/passwd && \
+    echo -e '#!/bin/sh\nxrdb $HOME/.Xresources\nstartxfce4 &' > /home/docker/.vnc/xstartup && \
+    chmod +x /home/docker/.vnc/xstartup
+
+## Switch back to root for rest of setup
+USER root
+
+
+# Install noVNC
+RUN mkdir -p /opt/novnc /opt/websockify && \
+    wget https://github.com/novnc/noVNC/archive/refs/heads/master.zip -O /tmp/novnc.zip && \
+    unzip /tmp/novnc.zip -d /opt && \
+    mv /opt/noVNC-master/* /opt/novnc/ && \
+    wget https://github.com/novnc/websockify/archive/refs/heads/master.zip -O /tmp/websockify.zip && \
+    unzip /tmp/websockify.zip -d /opt && \
+    mv /opt/websockify-master/* /opt/websockify/
+
+## Copy startup and supervisor configs
+COPY start-vnc.sh /usr/local/bin/start-vnc.sh
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+## Start VNC server and websockify
+RUN chmod +x /usr/local/bin/start-vnc.sh
+
+# Command to launch supervisor
+CMD ["/usr/bin/supervisord"]
+
+
+##################################
+# Dev Testing Stage
+## Skips Spack, Palace, Qiskit Metal, SQuADDS, SQDMetal
+##################################
+FROM base AS dev
+
+## Install miniconda for the docker user
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh && \
+    bash miniconda.sh -b -p $HOME/miniconda && \
+    rm miniconda.sh && \
+    $HOME/miniconda/bin/conda init bash && \
+    echo 'export PATH="$HOME/miniconda/bin:$PATH"' >> ~/.bashrc
+
     
 ## Set conda to automatically activate the qdws environment on shell startup
 RUN echo 'conda activate qdws' >> ~/.bashrc

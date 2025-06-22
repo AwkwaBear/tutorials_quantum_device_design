@@ -1,5 +1,5 @@
 services:
-  qdd-gui:
+  qdws:
     build: .
     ports:
       - "6080:6080"

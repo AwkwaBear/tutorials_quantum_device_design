@@ -76,7 +76,7 @@ Once you install Docker and build the toolkit it will run a virtualized ubuntu d
 
 3. **Compose Docker container:**
 
-   - Windows:
+   - **Windows:**
      - Navigate to the inside the unzipped `tutorials_quantum_device_design/docker/` folder from step 2 using windows `File Explorer`
      - Click the navigation bar at the top of the file explorer window and and type `powershell` then press `enter`
        - ![alt text](docs\images\fileExplorerNavBar.png)
